@@ -34,6 +34,7 @@ export default function Home() {
         if (result) {
           console.log("Okto Authentication successful");
           await loadWallets();
+          window.location.href = "/register";
           resolve({ result: true });
         } else if (error) {
           console.error("Okto Authentication error:", error);
