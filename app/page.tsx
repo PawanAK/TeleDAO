@@ -20,6 +20,21 @@ export default function Home() {
   const [wallets, setWallets] = React.useState<any[]>([]);
 
   useEffect(() => {
+    const handleAuthenticationFlow = async () => {
+      const pendingUserId = localStorage.getItem('pendingUserId');
+      
+      if (session && isLoggedIn && pendingUserId) {
+        // Clear the pending userId
+        localStorage.removeItem('pendingUserId');
+        // Redirect to registration with userId
+        router.push(`/register/${pendingUserId}`);
+      }
+    };
+
+    handleAuthenticationFlow();
+  }, [session, isLoggedIn, router]);
+
+  useEffect(() => {
     if (isLoggedIn) {
       loadWallets();
     }
