@@ -3,54 +3,58 @@
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
-import { useOkto } from "okto-sdk-react"
-import { RulesEditModal } from "@/components/RulesEditModal"
+import { useOkto, OktoContextType } from "okto-sdk-react"
+import { RulesEditModal } from "@/app/components/RulesEditModal"
 import { LoginButton } from "@/app/components/LoginButton"
 import { useToast } from "@/hooks/use-toast"
 
 export default function CommunityRules({ params }: { params: { communityId: string } }) {
+  console.log("Rendering CommunityRules component")
+  console.log("Community ID:", params.communityId)
+
   const router = useRouter()
   const { data: session } = useSession()
-  const { isLoggedIn, authenticate } = useOkto()
+  const { isLoggedIn, authenticate } = useOkto() as OktoContextType
   const [rules, setRules] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    // Load community rules from localStorage
-    const communityData = localStorage.getItem('communityData')
-    if (communityData) {
-      const data = JSON.parse(communityData)
-      if (data.communityId === params.communityId) {
-        setRules(data.rules)
-      }
-    }
+    console.log("Fetching community rules")
+    // TODO: Fetch community rules from an API or database
+    // For now, we'll use a placeholder
+    setRules("These are placeholder community rules.")
+    console.log("Rules set to placeholder")
   }, [params.communityId])
 
   const handleAuthenticate = async () => {
-    if (session?.id_token) {
+    console.log("Attempting authentication")
+    if (session?.user?.email) {
       try {
-        await authenticate(session.id_token)
+        await authenticate(session.user.email)
+        console.log("Authentication successful")
       } catch (error) {
         console.error("Authentication failed:", error)
       }
+    } else {
+      console.log("No user email available for authentication")
     }
   }
 
   const handleSaveRules = (newRules: string) => {
-    const communityData = localStorage.getItem('communityData')
-    if (communityData) {
-      const data = JSON.parse(communityData)
-      data.rules = newRules
-      localStorage.setItem('communityData', JSON.stringify(data))
-      setRules(newRules)
-      
-      toast({
-        title: "Success",
-        description: "Community rules updated successfully",
-      })
-    }
+    console.log("Saving new rules:", newRules)
+    // TODO: Save rules to an API or database
+    setRules(newRules)
+    
+    toast({
+      title: "Success",
+      description: "Community rules updated successfully",
+    })
+    console.log("Rules updated and toast displayed")
   }
+
+  console.log("Current session status:", !!session)
+  console.log("Current login status:", isLoggedIn)
 
   return (
     <main className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -85,7 +89,10 @@ export default function CommunityRules({ params }: { params: { communityId: stri
               </div>
 
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {
+                  console.log("Opening rules edit modal")
+                  setIsModalOpen(true)
+                }}
                 className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
               >
                 Modify Rules
@@ -93,7 +100,10 @@ export default function CommunityRules({ params }: { params: { communityId: stri
 
               <RulesEditModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={() => {
+                  console.log("Closing rules edit modal")
+                  setIsModalOpen(false)
+                }}
                 currentRules={rules}
                 onSave={handleSaveRules}
               />

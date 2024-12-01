@@ -21,18 +21,32 @@ export default function Home() {
 
   useEffect(() => {
     const handleAuthenticationFlow = async () => {
-      const pendingUserId = localStorage.getItem('pendingUserId');
+      console.log('Home: Starting authentication flow check')
+      console.log('Home: Session status:', !!session)
+      console.log('Home: isLoggedIn status:', isLoggedIn)
       
-      if (session && isLoggedIn && pendingUserId) {
-        // Clear the pending userId
-        localStorage.removeItem('pendingUserId');
-        // Redirect to registration with userId
-        router.push(`/register/${pendingUserId}`);
+      const pendingUserId = localStorage.getItem('pendingUserId')
+      const pendingMemberId = localStorage.getItem('pendingMemberId')
+      
+      console.log('Home: Pending IDs:', { pendingUserId, pendingMemberId })
+      
+      if (session && isLoggedIn) {
+        if (pendingUserId) {
+          console.log('Home: Processing pendingUserId redirect')
+          localStorage.removeItem('pendingUserId')
+          router.push(`/register/${pendingUserId}`)
+        } else if (pendingMemberId) {
+          console.log('Home: Processing pendingMemberId redirect')
+          localStorage.removeItem('pendingMemberId')
+          router.push(`/members/${pendingMemberId}`)
+        }
+      } else {
+        console.log('Home: Not authenticated yet. Session or isLoggedIn missing')
       }
-    };
+    }
 
-    handleAuthenticationFlow();
-  }, [session, isLoggedIn, router]);
+    handleAuthenticationFlow()
+  }, [session, isLoggedIn, router])
 
   useEffect(() => {
     if (isLoggedIn) {
