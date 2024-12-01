@@ -46,12 +46,20 @@ export default function Home() {
   async function loadWallets() {
     try {
       console.log("Fetching wallets...");
+      console.log("Current login status:", isLoggedIn);
+      console.log("Using idToken:", idToken);
       const response = await getWallets();
-      console.log("Wallets data:", response);
+      console.log("Raw API Response:", response);
       const walletsData = response.wallets || [];
       setWallets(walletsData);
     } catch (error) {
       console.error("Error fetching wallets:", error);
+      console.error("Error details:", {
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data,
+        message: error?.message
+      });
     }
   }
 
