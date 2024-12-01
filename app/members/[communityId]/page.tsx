@@ -9,52 +9,43 @@ import { LoginButton } from "@/app/components/LoginButton"
 import { useToast } from "@/hooks/use-toast"
 
 export default function CommunityRules({ params }: { params: { communityId: string } }) {
-  console.log("Rendering CommunityRules component")
-  console.log("Community ID:", params.communityId)
-
-  const router = useRouter()
   const { data: session } = useSession()
   const { isLoggedIn, authenticate } = useOkto() as OktoContextType
+  const router = useRouter()
   const [rules, setRules] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    console.log("Fetching community rules")
-    // TODO: Fetch community rules from an API or database
-    // For now, we'll use a placeholder
+    if (!session || !isLoggedIn) {
+      localStorage.setItem('pendingMemberId', params.communityId)
+    }
+  }, [session, isLoggedIn, params.communityId])
+
+  useEffect(() => {
     setRules("These are placeholder community rules.")
-    console.log("Rules set to placeholder")
   }, [params.communityId])
 
   const handleAuthenticate = async () => {
-    console.log("Attempting authentication")
-    if (session?.user?.email) {
-      try {
-        await authenticate(session.user.email)
-        console.log("Authentication successful")
-      } catch (error) {
-        console.error("Authentication failed:", error)
-      }
-    } else {
-      console.log("No user email available for authentication")
+    if (!session) {
+      router.push('/')
+      return
+    }
+    
+    try {
+      await authenticate(session.id_token)
+    } catch (error) {
+      console.error('Authentication failed:', error)
     }
   }
 
   const handleSaveRules = (newRules: string) => {
-    console.log("Saving new rules:", newRules)
-    // TODO: Save rules to an API or database
     setRules(newRules)
-    
     toast({
       title: "Success",
       description: "Community rules updated successfully",
     })
-    console.log("Rules updated and toast displayed")
   }
-
-  console.log("Current session status:", !!session)
-  console.log("Current login status:", isLoggedIn)
 
   return (
     <main className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -89,10 +80,7 @@ export default function CommunityRules({ params }: { params: { communityId: stri
               </div>
 
               <button
-                onClick={() => {
-                  console.log("Opening rules edit modal")
-                  setIsModalOpen(true)
-                }}
+                onClick={() => setIsModalOpen(true)}
                 className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
               >
                 Modify Rules
@@ -100,10 +88,7 @@ export default function CommunityRules({ params }: { params: { communityId: stri
 
               <RulesEditModal
                 isOpen={isModalOpen}
-                onClose={() => {
-                  console.log("Closing rules edit modal")
-                  setIsModalOpen(false)
-                }}
+                onClose={() => setIsModalOpen(false)}
                 currentRules={rules}
                 onSave={handleSaveRules}
               />
@@ -113,4 +98,4 @@ export default function CommunityRules({ params }: { params: { communityId: stri
       </div>
     </main>
   )
-} 
+}

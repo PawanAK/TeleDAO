@@ -8,7 +8,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
-  const [apiKey, setApiKey] = useState("43274b9a-0410-4090-a141-8a2789ee7476");
+  const [apiKey, setApiKey] = useState("e1ce1a83-d89e-41f5-801f-4220eb20bbd9");
   const [buildType, setBuildType] = useState(BuildType.SANDBOX);
   const { data: session } = useSession();
 
