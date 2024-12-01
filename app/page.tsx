@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useOkto, OktoContextType } from "okto-sdk-react";
 import { LoginButton } from "./components/LoginButton";
 import { useAppContext } from "./components/AppContext";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -13,6 +14,7 @@ export default function Home() {
     authenticate,
     getWallets
   } = useOkto() as OktoContextType;
+  const router = useRouter();
   
   const idToken = useMemo(() => (session ? session.id_token : null), [session]);
   const [wallets, setWallets] = React.useState<any[]>([]);
@@ -34,7 +36,7 @@ export default function Home() {
         if (result) {
           console.log("Okto Authentication successful");
           await loadWallets();
-          window.location.href = "/register";
+          router.push("/register");
           resolve({ result: true });
         } else if (error) {
           console.error("Okto Authentication error:", error);
@@ -112,6 +114,15 @@ export default function Home() {
         <p>Google Session: {session ? 'Yes' : 'No'}</p>
         <p>Okto Login: {isLoggedIn ? 'Yes' : 'No'}</p>
       </div>
+
+      {/* Register Community Button */}
+      <button
+        className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
+        onClick={() => router.push('/register')}
+        disabled={!isLoggedIn}
+      >
+        Register Community
+      </button>
     </main>
   );
 }
