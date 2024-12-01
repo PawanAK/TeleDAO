@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, CheckCircle2, Copy } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
-import { Account, Aptos, AptosConfig, Network, InputSubmitTransactionData } from "@aptos-labs/ts-sdk";
+import { Account, Aptos, AptosConfig, Network, InputSubmitTransactionData, PrivateKeyVariants } from "@aptos-labs/ts-sdk";
 import {
   Ed25519PrivateKey,
+  PrivateKey,
   Serializer,
   MoveVector,
   U64,
@@ -32,9 +33,13 @@ export default function Register({ params }: { params: { userId: string } }) {
   // Module address for your Move contract
   const MODULE_ADDRESS = "0x880873652998d2cb0c63db5d7b11d7115a626f278c6d1bc56170aead9a8b00e4"
 
-  const privateKey = new Ed25519PrivateKey(
-    "0x78c13830e66f2685bd0c61c6cce6035ea66ca3ead544d857dce2336a7d55d741"
+  const formattedPrivateKey = PrivateKey.formatPrivateKey(
+    "78c13830e66f2685bd0c61c6cce6035ea66ca3ead544d857dce2336a7d55d741", 
+    PrivateKeyVariants.Ed25519
   );
+  
+  const privateKey = new Ed25519PrivateKey(formattedPrivateKey);
+
   const admin = Account.fromPrivateKey({ privateKey });
   
   const [formData, setFormData] = useState({
