@@ -4,14 +4,21 @@ import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
 import { useOkto, OktoContextType } from "okto-sdk-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Loader2, AlertCircle, CheckCircle2, Copy } from 'lucide-react'
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2, CheckCircle2, Copy } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
+import { Account, Aptos, AptosConfig, Network, InputSubmitTransactionData } from "@aptos-labs/ts-sdk";
+import {
+  Ed25519PrivateKey,
+  Serializer,
+  MoveVector,
+  U64,
+} from "@aptos-labs/ts-sdk";
 
 
 export default function Register({ params }: { params: { userId: string } }) {
@@ -22,12 +29,23 @@ export default function Register({ params }: { params: { userId: string } }) {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   
+  // Module address for your Move contract
+  const MODULE_ADDRESS = "0x880873652998d2cb0c63db5d7b11d7115a626f278c6d1bc56170aead9a8b00e4"
+
+  const privateKey = new Ed25519PrivateKey(
+    "0x78c13830e66f2685bd0c61c6cce6035ea66ca3ead544d857dce2336a7d55d741"
+  );
+  const admin = Account.fromPrivateKey({ privateKey });
+  
   const [formData, setFormData] = useState({
     communityId: "",
     name: "",
     rules: "",
     walletAddress: ""
   })
+
+  const config = new AptosConfig({ network: Network.TESTNET });
+  const aptos = new Aptos(config);
 
   const [uniqueLink, setUniqueLink] = useState("")
   const [copied, setCopied] = useState(false)
@@ -66,26 +84,46 @@ export default function Register({ params }: { params: { userId: string } }) {
     }
   }
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    
+
     try {
       const timestamp = Date.now()
       const generatedLink = `${window.location.origin}/community/${formData.communityId}-${timestamp}`
+      
+      // Prepare blockchain transaction
+      const transaction = await aptos.transaction.build.simple({
+        sender: admin.accountAddress,
+        data: {
+          function: `${MODULE_ADDRESS}::communitySaver::create_community`,
+          functionArguments: [
+            aptosWallet.address, // owner
+            formData.communityId, // community_id
+            formData.name, // community_name
+            formData.rules // community_prompt
+          ]
+        },
+      })
+
+      console.log(transaction)
+
+
+      // Sign and submit transaction
+      const senderAuthenticator = await aptos.transaction.sign({ signer: admin, transaction });
+      console.log('Sender Authenticator:', senderAuthenticator);
+      const pendingTxn = await aptos.transaction.submit.simple({ transaction, senderAuthenticator });
+      console.log('Pending Transaction:', pendingTxn);
+      // Set unique link
       setUniqueLink(generatedLink)
 
+      // Store data in local storage
       localStorage.setItem('communityData', JSON.stringify({
         ...formData,
         uniqueLink: generatedLink,
         userId: session?.user?.email
       }))
-
-      console.log("Registration data:", {
-        ...formData,
-        uniqueLink: generatedLink,
-        userId: session?.user?.email
-      })
 
       toast({
         title: "Success",
@@ -161,7 +199,7 @@ export default function Register({ params }: { params: { userId: string } }) {
                   value={formData.rules}
                   onChange={(e) => setFormData({...formData, rules: e.target.value})}
                   className="h-32"
-                  required
+                  required      
                 />
               </div>
 
@@ -179,37 +217,10 @@ export default function Register({ params }: { params: { userId: string } }) {
               </Button>
             </form>
 
-            {uniqueLink && (
-              <div className="mt-6 space-y-2">
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <AlertDescription className="mt-2">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Your unique community link:</p>
-                    <div className="flex items-center gap-2 bg-white p-2 rounded-md">
-                      <code className="text-xs md:text-sm flex-1 break-all">
-                        {uniqueLink}
-                      </code>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={copyToClipboard}
-                        className="shrink-0"
-                      >
-                        {copied ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
+            
           </CardContent>
         </Card>
       </div>
     </main>
   )
 }
-
