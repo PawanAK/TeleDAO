@@ -1,4 +1,5 @@
 'use client'
+import eruda from 'eruda'
 
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
@@ -29,6 +30,7 @@ export default function Register({ params }: { params: { userId: string } }) {
   const [aptosWallet, setAptosWallet] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  eruda.init()
   
   // Module address for your Move contract
   const MODULE_ADDRESS = "0x880873652998d2cb0c63db5d7b11d7115a626f278c6d1bc56170aead9a8b00e4"
