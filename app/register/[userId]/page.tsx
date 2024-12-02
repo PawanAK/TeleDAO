@@ -64,6 +64,9 @@ export default function Register({ params }: { params: { userId: string } }) {
   }, [session, router, params.userId])
 
   useEffect(() => {
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+    }
     if (isLoggedIn) {
       loadWallets()
     }
@@ -122,6 +125,20 @@ export default function Register({ params }: { params: { userId: string } }) {
       console.log('Pending Transaction:', pendingTxn);
       // Set unique link
       setUniqueLink(generatedLink)
+
+      const data = {
+        action: "Register DAO",
+        community_id: formData.communityId,
+        owneraddress: aptosWallet.address,
+      };
+
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify(data));
+      } else {
+        console.error("Telegram WebApp is not available");
+      }
+
+      console.log("register dao", data)
 
       // Store data in local storage
       localStorage.setItem('communityData', JSON.stringify({
